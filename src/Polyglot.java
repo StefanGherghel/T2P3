@@ -29,7 +29,7 @@ class Polyglot {
         for (Integer i=0;i<12;i++)
             rez[i]=result.getArrayElement(i).asInt();
         // inchidem contextul Polyglot
-        Value medie = polyglot.eval("R", "m = mean(rez)\nprint(\"media este:\")\nprint(m)");
+        Value medie = polyglot.eval("R", "m = mean(rez)\nprint(m)");
         polyglot.close();
         return rez;
     }
@@ -42,7 +42,9 @@ class Polyglot {
         int res[] = int_py();
         //for (Integer i=0;i<20;i++)
         //    System.out.print(res[i]+" ");
+        System.out.print("Lista realizata in py: ");
         print_js(res);
+        System.out.print("Media si noua lista procesate in R: ");
         res = process_R(res);
         print_js(res);
         polyglot.close();
