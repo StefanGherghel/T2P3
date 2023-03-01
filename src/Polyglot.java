@@ -3,16 +3,33 @@ import org.graalvm.polyglot.*;
 
 //clasa principala - aplicatie JAVA
 class Polyglot {
-    //metoda privata pentru conversie low-case -> up-case folosind functia toupper() din R
-    //metoda privata pentru evaluarea unei sume de control simple a literelor unui text ASCII, folosind PYTHON
     private static int[] int_py(){
         Context polyglot = Context.newBuilder().allowAllAccess(true).build();
-        Value result = polyglot.eval("python", "import random\nv=[]\nfor i in range(10):\n\tv.append(random.randint(0,100))\nv");
+        Value result = polyglot.eval("python", "import random\nv=[]\nfor i in range(20):\n\tv.append(random.randint(0,100))\nv");
 
-        int rez[] = new int[10];
-        for (Integer i=0;i<10;i++)
+        int rez[] = new int[20];
+        for (Integer i=0;i<20;i++)
             rez[i]=result.getArrayElement(i).asInt();
         // inchidem contextul Polyglot
+        polyglot.close();
+        return rez;
+    }
+
+    private static void print_js(int[] v){
+        Context polyglot = Context.newBuilder().allowAllAccess(true).build();
+        polyglot.getBindings("js").putMember("v",v);
+        Value result = polyglot.eval("js", "console.log(v)");
+        polyglot.close();
+    }
+    private static int[] process_R(int[] v){
+        Context polyglot = Context.newBuilder().allowAllAccess(true).build();
+        polyglot.getBindings("R").putMember("v",v);
+        Value result = polyglot.eval("R", "nv <- as.vector(v)\nrez <- sort(nv)\nrez<-rez[-c(1,2,3,4,17,18,19,20)]");
+        int rez[] = new int[12];
+        for (Integer i=0;i<12;i++)
+            rez[i]=result.getArrayElement(i).asInt();
+        // inchidem contextul Polyglot
+        Value medie = polyglot.eval("R", "m = mean(rez)\nprint(\"media este:\")\nprint(m)");
         polyglot.close();
         return rez;
     }
@@ -23,8 +40,11 @@ class Polyglot {
         Context polyglot = Context.create();
 
         int res[] = int_py();
-        for (Integer i=0;i<10;i++)
-            System.out.print(res[i]+" ");
+        //for (Integer i=0;i<20;i++)
+        //    System.out.print(res[i]+" ");
+        print_js(res);
+        res = process_R(res);
+        print_js(res);
         polyglot.close();
     }
 }
