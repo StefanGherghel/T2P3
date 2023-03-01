@@ -1,53 +1,87 @@
 //import libraria principala polyglot din graalvm
 import org.graalvm.polyglot.*;
 
+import java.util.Arrays;
+
+
 //clasa principala - aplicatie JAVA
 class Polyglot {
-    private static int[] int_py(){
+    //metoda privata pentru conversie low-case -> up-case folosind functia toupper() din R
+    private static String RToUpper(String token){
+        //construim un context care ne permite sa folosim elemente din R
         Context polyglot = Context.newBuilder().allowAllAccess(true).build();
-        Value result = polyglot.eval("python", "import random\nv=[]\nfor i in range(20):\n\tv.append(random.randint(0,100))\nv");
-
-        int rez[] = new int[20];
-        for (Integer i=0;i<20;i++)
-            rez[i]=result.getArrayElement(i).asInt();
+        //folosim o variabila generica care va captura rezultatul excutiei funcitiei R, toupper(String)
+        //pentru aexecuta instructiunea I din limbajul X, folosim functia graalvm polyglot.eval("X", "I");
+        Value result = polyglot.eval("R", "toupper(\""+token+"\");");
+        //utilizam metoda asString() din variabila incarcata cu output-ul executiei pentru a mapa valoarea generica la un String
+        String resultString = result.asString();
         // inchidem contextul Polyglot
         polyglot.close();
-        return rez;
+
+        return resultString;
     }
 
-    private static void print_js(int[] v){
+    //metoda privata pentru evaluarea unei sume de control simple a literelor unui text ASCII, folosind PYTHON
+    private static int SumCRC(String token){
+        //construim un context care ne permite sa folosim elemente din PYTHON
         Context polyglot = Context.newBuilder().allowAllAccess(true).build();
-        polyglot.getBindings("js").putMember("v",v);
-        Value result = polyglot.eval("js", "console.log(v)");
-        polyglot.close();
-    }
-    private static int[] process_R(int[] v){
-        Context polyglot = Context.newBuilder().allowAllAccess(true).build();
-        polyglot.getBindings("R").putMember("v",v);
-        Value result = polyglot.eval("R", "nv <- as.vector(v)\nrez <- sort(nv)\nrez<-rez[-c(1,2,3,4,17,18,19,20)]");
-        int rez[] = new int[12];
-        for (Integer i=0;i<12;i++)
-            rez[i]=result.getArrayElement(i).asInt();
+        //folosim o variabila generica care va captura rezultatul excutiei functiei PYTHON, sum()
+        //avem voie sa inlocuim anumite elemente din scriptul pe care il construim spre evaluare, aici token provine din JAVA, dar va fi interpretat de PYTHON
+        Value result = polyglot.eval("python", "sum((ord(ch) for ch in '" + token + "'))**2");
+        //utilizam metoda asInt() din variabila incarcata cu output-ul executiei, pentru a mapa valoarea generica la un Int
+        int resultInt = result.asInt();
         // inchidem contextul Polyglot
-        Value medie = polyglot.eval("R", "m = mean(rez)\nprint(m)");
         polyglot.close();
-        return rez;
+
+        return resultInt;
     }
 
     //functia MAIN
     public static void main(String[] args) {
         //construim un context pentru evaluare elemente JS
         Context polyglot = Context.create();
-
-        int res[] = int_py();
-        //for (Integer i=0;i<20;i++)
-        //    System.out.print(res[i]+" ");
-        System.out.print("Lista realizata in py: ");
-        print_js(res);
-        System.out.print("Media si noua lista procesate in R: ");
-        res = process_R(res);
-        print_js(res);
+        //construim un array de string-uri, folosind cuvinte din pagina web:  https://chrisseaton.com/truffleruby/tenthings/
+        Value array = polyglot.eval("js", "[\"ana\",\"are\",\"ana\",\"si\",\"ana\",\"si\",];");
+        //pentru fiecare cuvant, convertim la upcase folosind R si calculam suma de control folosind PYTHON
+        String[] element= new String[50];
+        String[] upper = new String[50];
+        int[] crc = new int[50];
+        for(var i=0;i<50;i++)
+            crc[i]=0;
+        for (int i = 0; i < array.getArraySize();i++){
+            element[i] = array.getArrayElement(i).asString();
+            upper[i] = RToUpper(element[i]);
+            crc[i] = SumCRC(upper[i]);
+            System.out.println(upper[i] + " -> " + crc[i]);
+        }
+        System.out.println("Elemente cu aceeasi suma de control: ");
+        int checked_crc[] = new int[50];
+        for(var i=0;i<50;i++)
+            checked_crc[i]=0;
+        int i=0;
+        while(crc[i]!=0)
+        {
+            Boolean ok = Boolean.FALSE;
+            int j=0;
+            while(checked_crc[j]!=0)
+            {
+                if(checked_crc[j]==crc[i])
+                    ok = Boolean.TRUE;
+                j++;
+            }
+            checked_crc[j] = crc[i];
+            if(ok==Boolean.FALSE)
+            {
+                System.out.print("\n"+upper[i]+" ");
+                for(var k=i+1;k<50;k++)
+                {
+                    if(crc[k]==crc[i])
+                        System.out.print(upper[k]+" ");
+                }
+            }
+            i++;
+        }
+        // inchidem contextul Polyglot
         polyglot.close();
     }
 }
-
