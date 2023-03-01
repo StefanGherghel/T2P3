@@ -18,6 +18,7 @@ class Polyglot {
         return resultString;
     }
 
+
     //metoda privata pentru evaluarea unei sume de control simple a literelor unui text ASCII, folosind PYTHON
     private static int[] int_py(){
         Context polyglot = Context.newBuilder().allowAllAccess(true).build();
