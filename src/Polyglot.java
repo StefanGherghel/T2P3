@@ -14,7 +14,6 @@ class Polyglot {
             rez[i]=result.getArrayElement(i).asInt();
         // inchidem contextul Polyglot
         polyglot.close();
-
         return rez;
     }
 
